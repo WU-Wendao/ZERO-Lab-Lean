@@ -1,0 +1,21 @@
+# Toolchains, dependency checkouts, and generated Lean artifacts.
+**/.lake/
+**/.tools/
+*.olean
+*.ilean
+*.trace
+*.olean.hash
+*.ilean.hash
+
+# Verification logs are regenerated locally and uploaded by CI.
+**/proof/*.log
+**/proof/verification.json
+
+# Python and editor/OS files.
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+Thumbs.db
+*.swp
+.idea/

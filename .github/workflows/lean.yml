@@ -1,0 +1,64 @@
+name: Lean verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lean-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.projects.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - id: projects
+        name: Discover independent projects
+        run: echo "matrix=$(python3 scripts/projects.py --json)" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: Verify ${{ matrix.name }}
+    needs: discover
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Check project layout and source coverage
+        env:
+          PROJECT: ${{ matrix.name }}
+        run: python3 scripts/verify.py --project "$PROJECT" --static
+      - name: Install the pinned toolchain and fetch dependencies
+        uses: leanprover/lean-action@50fcf42d2e460296f1a34b402e990d1b24f8b596 # v1
+        with:
+          lake-package-directory: ${{ matrix.path }}
+          auto-config: 'false'
+          build: 'false'
+          test: 'false'
+          lint: 'false'
+          use-mathlib-cache: 'auto'
+      - name: Compile and audit all project theorems
+        env:
+          PROJECT: ${{ matrix.name }}
+        run: python3 scripts/verify.py --project "$PROJECT"
+      - name: Preserve verification logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: verification-${{ matrix.name }}
+          path: |
+            ${{ matrix.path }}/proof/*.log
+            ${{ matrix.path }}/proof/verification.json
+          if-no-files-found: ignore
+          retention-days: 14
