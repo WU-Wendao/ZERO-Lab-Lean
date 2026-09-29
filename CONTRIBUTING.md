@@ -1,42 +1,51 @@
-# 添加和维护形式化问题
+# Adding and maintaining formalization projects
 
-## 添加一个问题
+**English** | [简体中文](CONTRIBUTING.zh-CN.md)
 
-1. 在 `problems/<problem-slug>/` 建立独立 Lake 项目。目录使用小写英文和连字符，例如 `exact-value-optimization`；每个问题使用自己的 Lean 模块命名空间。
-2. 在该目录创建并提交 `lean-toolchain`、`lakefile.toml`（或 `lakefile.lean`）和 `lake-manifest.json`。依赖采用固定版本或提交号。
-3. 提供总导入文件及证明模块；总入口应覆盖所有需要验证的源码。
-4. 添加 `README.md`、`proof/COVERAGE.md`、`proof/Audit.lean` 和 `scripts/verify.py`。可参考现有问题的布局，调整库名、源码目录及审计命名空间。
-5. 在仓库根目录运行 `python scripts/verify.py --project <problem-slug>`，确认构建与公理审计通过，再把问题加入首页索引。
+## Add a problem
 
-CI 自动发现每个直接位于 `problems/` 下的项目，无须手动维护工作流中的问题列表。发现不完整目录时会明确报错，避免项目被静默跳过。
+1. Create an independent Lake project under `problems/<problem-slug>/`. Use lowercase letters and hyphens, for example `exact-value-optimization`, and give each problem its own Lean module namespace.
+2. Create and commit `lean-toolchain`, `lakefile.toml` (or `lakefile.lean`), and `lake-manifest.json` in that directory. Pin dependencies to versions or commit hashes.
+3. Provide a top-level import module and the proof modules. The entry point must cover all sources that need verification.
+4. Add an English `README.md`, a Chinese `README.zh-CN.md`, `proof/COVERAGE.md`, `proof/COVERAGE.zh-CN.md`, `proof/Audit.lean`, and `scripts/verify.py`. Follow the existing project's layout, adapting the library name, source directory, and audited namespace.
+5. Run `python scripts/verify.py --project <problem-slug>` from the repository root. Once the build and axiom audit pass, add the problem to the indexes in both root README files.
 
-## 问题说明需要包含什么
+CI discovers projects directly under `problems/`; its project list does not need manual updates. Incomplete project layouts produce an explicit error so that a project cannot be silently skipped.
 
-- 问题背景和数学结论；明确维度、参数范围、函数类、算法模型等假设。
-- 主要 Lean 定理的文件与名称，以及准确的形式化覆盖范围。
-- Lean/Mathlib 版本、编译命令和公理审计命令。
-- 与原稿相比的证明路线、条件、常数或记号调整。
-- 来源标题和版本；提供原稿指纹或公开链接即可。原稿全文并非编译依赖，只有在计划公开原稿时才将其加入仓库。
-- 最近一次实际验证结果，区分手写定理数量与含自动生成辅助项的审计数量。
+## What a problem README should include
 
-`proof/COVERAGE.md` 应逐项对应原稿结论与实际 Lean 声明。编译通过验证的是 Lean 中的命题；原文与形式化之间的对应仍需检查定义与假设。
+- The problem and mathematical results, with explicit assumptions on dimension, parameter ranges, function classes, and algorithm models.
+- The filenames and names of the main Lean theorems, and an accurate description of formalization coverage.
+- Lean/Mathlib versions, build instructions, and axiom-audit instructions.
+- Any changes to proof approaches, assumptions, constants, or notation relative to the manuscript.
+- The source title and version. A file fingerprint or public link is sufficient. The full manuscript is not a build dependency; include it only when publishing the manuscript is intended.
+- The latest actual verification result, distinguishing handwritten theorems from audited constants that include generated auxiliary declarations.
 
-## 验证接口
+Both coverage documents should map manuscript results to actual Lean declarations. Successful compilation verifies the statements expressed in Lean; correspondence with the manuscript still requires checking definitions and assumptions.
 
-每个问题的 `scripts/verify.py` 接受以下调用：
+## Verification interface
+
+Each project's `scripts/verify.py` supports:
 
 ```sh
-python scripts/verify.py           # 静态检查、lake build、传递公理审计
-python scripts/verify.py --static  # 仅检查源码及模块覆盖，不需要 Lean
+python scripts/verify.py           # Source checks, lake build, transitive axiom audit
+python scripts/verify.py --static  # Source coverage checks only; no Lean installation needed
 ```
 
-脚本使用 PATH 中的 `lake`，以所在问题目录为工作目录；失败时返回非零退出码。生成日志写入该问题的 `proof/` 目录。应确保总入口实际导入全部证明模块，并拒绝占位证明、自定义公理及原生执行替代证明。审计检查全部项目定理的传递依赖，仅允许 Lean 的标准基础公理。
+The script uses `lake` from PATH, runs in its own problem directory, and exits with a nonzero status on failure. Generated logs go into that project's `proof/` directory. Ensure that the top-level module imports every proof module, and reject proof placeholders, custom axioms, and native execution used in place of proof. Audit the transitive dependencies of every project theorem, allowing only Lean's standard foundational axioms.
 
-只有确认环境和审计均通过，才将问题列为已验证。新增证明的状态应在该问题说明中准确记录。
+Mark a project as verified only after both the build and audit succeed. Record the status of newly added proofs accurately in the problem README.
 
-## 保持问题彼此独立
+## Keep projects independent
 
-- 不跨问题目录导入源码，也不依赖本机绝对路径、父目录缓存或私有工具链。
-- 不提交 `.lake/`、`.tools/`、编译产物、访问令牌或机器相关设置。
-- 更新依赖时同时更新锁文件，并在该问题目录完成全部验证。
-- 保持修改范围清晰，在 Pull Request 中说明数学结论、假设或覆盖范围是否变化，以及运行过的验证。
+- Do not import sources across problem directories or depend on machine-specific absolute paths, parent-directory caches, or private toolchains.
+- Do not commit `.lake/`, `.tools/`, compiled artifacts, access tokens, or machine-specific settings.
+- Update the lockfile when changing dependencies and run all verification steps within that project.
+- Keep changes focused. In pull requests, explain whether mathematical statements, assumptions, or coverage changed, and report the checks performed.
+
+## Bilingual documentation conventions
+
+- Use default filenames for English and the `.zh-CN.md` suffix for Simplified Chinese. Each document pair links to the other language at the top.
+- Chinese pages should link to Chinese explanations when available; English pages should link to English explanations. Keep Lean files, commands, and theorem identifiers consistent.
+- Update mathematical claims, assumptions, constants, applicability, known limitations, and verification status in both languages in the same commit. Check language-switch links and relative links before submitting.
+- Maintain one shared set of Lean proofs. Language variants apply to documentation only.

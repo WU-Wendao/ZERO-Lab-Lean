@@ -1,26 +1,28 @@
 # ZERO-Lab-Lean
 
+**English** | [简体中文](README.zh-CN.md)
+
 [![Lean verification](https://github.com/WU-Wendao/ZERO-Lab-Lean/actions/workflows/lean.yml/badge.svg)](https://github.com/WU-Wendao/ZERO-Lab-Lean/actions/workflows/lean.yml)
 
-**ZERO Lab 的 Lean 4 形式化证明集合。** 每个研究问题拥有独立目录、工具链和依赖，集中保存数学结论、Lean 证明及复现方法。
+**A collection of Lean 4 formalizations from ZERO Lab.** Each research problem has its own directory, toolchain, and dependencies, with mathematical statements, Lean proofs, and reproducible verification instructions.
 
-## 问题索引
+## Problem index
 
-| 问题 | 内容 | 环境 | 验证 |
+| Problem | Scope | Environment | Verification |
 |---|---|---|---|
-| [精确函数值下的光滑凸优化](problems/exact-value-optimization/) | 确定性零阶查询复杂度：完整上界、整数参数下界、维度—精度下界与中等精度匹配结果 | Lean 4.19.0 / Mathlib v4.19.0 | 37 个模块、255 个手写定理；449 个定理常量通过公理审计 |
+| [Smooth convex optimization with exact function values](problems/exact-value-optimization/) | Deterministic zeroth-order query complexity: a complete upper bound, an integer-parameter lower bound, a dimension–accuracy lower bound, and matching bounds at moderate accuracy | Lean 4.19.0 / Mathlib v4.19.0 | 37 modules and 255 handwritten theorems; 449 theorem constants passed the axiom audit |
 
-该问题对应 *Near-Optimal Deterministic Exact-Value Complexity for Smooth Convex Optimization*。在文中指定的维度及中等精度区间内，精确函数值查询复杂度为
+This project formalizes *Near-Optimal Deterministic Exact-Value Complexity for Smooth Convex Optimization*. Under the manuscript's dimension and moderate-accuracy conditions, the exact-value query complexity is
 
 $$
 N_\epsilon=\Theta\!\left(d\sqrt{\frac{\beta R^2}{\epsilon}}\right).
 $$
 
-具体假设、适用范围、常数与形式化中的证明路线见[问题说明](problems/exact-value-optimization/README.md)和[定理覆盖清单](problems/exact-value-optimization/proof/COVERAGE.md)。
+See the [problem README](problems/exact-value-optimization/README.md) and [theorem coverage map](problems/exact-value-optimization/proof/COVERAGE.md) for the assumptions, scope, constants, and proof approaches used in the formalization.
 
-## 快速开始
+## Quick start
 
-安装 [elan](https://github.com/leanprover/elan#installation)，确保 `lake` 可用；验证脚本需要 Python 3.10 或更高版本。每个问题的 `lean-toolchain` 会选择相应的 Lean 版本。
+Install [elan](https://github.com/leanprover/elan#installation) and make sure `lake` is on your PATH. The verification scripts require Python 3.10 or later. Each project's `lean-toolchain` selects its Lean version.
 
 ```sh
 git clone https://github.com/WU-Wendao/ZERO-Lab-Lean.git
@@ -29,54 +31,58 @@ lake exe cache get
 python scripts/verify.py
 ```
 
-`lake exe cache get` 下载该项目固定版本的 Mathlib 编译缓存，首次运行需要网络和足够磁盘空间。验证脚本随后检查源码覆盖、编译全部模块并运行传递公理审计。macOS/Linux 上可按安装方式将 `python` 换成 `python3`。
+`lake exe cache get` downloads compiled Mathlib artifacts for the project's pinned version. The first run requires network access and sufficient disk space. The verification script then checks source coverage, builds every module, and audits transitive axiom dependencies. On macOS/Linux, use `python3` instead of `python` if required by your installation.
 
-若只需要编译或单独审计：
+To run the build or audit separately:
 
 ```sh
 lake build
 lake env lean proof/Audit.lean
 ```
 
-## 仓库结构
+## Repository layout
 
 ```text
 ZERO-Lab-Lean/
-├── README.md
-├── CONTRIBUTING.md                  # 新问题接入与维护约定
-├── scripts/                         # 问题发现、统一验证入口
-├── .github/workflows/lean.yml        # 按问题分别运行 CI
+├── README.md / README.zh-CN.md
+├── CONTRIBUTING.md / CONTRIBUTING.zh-CN.md  # Adding and maintaining projects
+├── scripts/                               # Project discovery and verification
+├── .github/workflows/lean.yml              # CI for each independent project
 └── problems/
     └── exact-value-optimization/
-        ├── README.md                # 数学问题、主要定理、复现方法
-        ├── PROVENANCE.md            # 原稿标题、版本与来源指纹
+        ├── README.md / README.zh-CN.md     # Problem, main theorems, reproduction
+        ├── PROVENANCE.md / PROVENANCE.zh-CN.md  # Source title, version, fingerprint
         ├── lean-toolchain
         ├── lakefile.toml
         ├── lake-manifest.json
-        ├── ExactValue.lean          # 总导入入口
-        ├── ExactValue/              # 证明源码
+        ├── ExactValue.lean                # Top-level import module
+        ├── ExactValue/                    # Proof sources
         ├── proof/
-        │   ├── COVERAGE.md          # 原文结论与 Lean 定理的对应
-        │   └── Audit.lean           # 传递公理检查
+        │   ├── COVERAGE.md / COVERAGE.zh-CN.md  # Manuscript-to-Lean correspondence
+        │   └── Audit.lean                 # Transitive axiom checks
         └── scripts/verify.py
 ```
 
-各问题是独立 Lake 项目。请进入对应问题目录运行 `lake`；仓库根目录不绑定统一 Lean/Mathlib 版本。
+Each problem is an independent Lake project. Run `lake` from the corresponding problem directory; the repository root does not impose a shared Lean/Mathlib version.
 
-从仓库根目录也可以统一操作：
+You can also manage verification from the repository root:
 
 ```sh
-python scripts/projects.py                              # 列出问题
+python scripts/projects.py                              # List projects
 python scripts/verify.py --project exact-value-optimization
-python scripts/verify.py                                # 验证全部问题
-python scripts/verify.py --static                        # 仅检查目录及源码
+python scripts/verify.py                                # Verify all projects
+python scripts/verify.py --static                        # Check layout and sources only
 ```
 
-## 验证与维护
+## Verification and maintenance
 
-- 每个问题提交 `lean-toolchain` 和 `lake-manifest.json`，固定可复现环境。
-- 证明模块必须进入总导入入口；验证脚本检查遗漏以及占位证明和信任绕过。
-- 公理审计检查定理的传递依赖，仅允许 `propext`、`Classical.choice` 和 `Quot.sound`。
-- CI 在推送、Pull Request 和手动触发时发现 `problems/` 下的全部项目，分别构建及审计，日志作为运行附件保存。
-- `.lake/`、工具链、依赖源码及生成日志不进入 Git。日志可在本地重新生成，或从 [Actions](https://github.com/WU-Wendao/ZERO-Lab-Lean/actions) 下载。
-- 新问题按 [CONTRIBUTING.md](CONTRIBUTING.md) 添加独立目录，再更新上方索引。已有问题的依赖升级应在自身目录内完成验证。
+- Commit each project's `lean-toolchain` and `lake-manifest.json` to pin its environment.
+- Include every proof module in the top-level import module. The verification script checks for omissions, proof placeholders, and trust escapes.
+- The axiom audit checks transitive theorem dependencies and allows only `propext`, `Classical.choice`, and `Quot.sound`.
+- On pushes, pull requests, and manual runs, CI discovers all projects under `problems/`, builds and audits them separately, and preserves logs as workflow artifacts.
+- Keep `.lake/`, toolchains, dependency checkouts, and generated logs out of Git. Regenerate logs locally or download them from [Actions](https://github.com/WU-Wendao/ZERO-Lab-Lean/actions).
+- Add new problems in separate directories following [CONTRIBUTING.md](CONTRIBUTING.md), then update the index above. Verify dependency upgrades within the affected project.
+
+## Documentation languages
+
+English documentation uses default filenames such as `README.md` and `CONTRIBUTING.md`; Simplified Chinese versions use the `.zh-CN.md` suffix. Each page links to its counterpart at the top. Update mathematical assumptions, constants, theorem names, coverage, and verification status in both versions in the same commit. Both languages share the same Lean proof sources.
